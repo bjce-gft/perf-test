@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: toggens-perf-test
+spec:
+  selector:
+    matchLabels:
+      app: toggens-perf-test
+  template:
+    metadata:
+      labels:
+        app: toggens-perf-test
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - toggens-perf-test
+              topologyKey: "kubernetes.io/hostname"
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 90
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: tier
+                  operator: In
+                  values:
+                  - backend
+              topologyKey: "kubernetes.io/hostname"
+      automountServiceAccountToken: false
+      containers:
+        - name: toggens-perf-test
+          image: "bczudek/perftest:1-amd64"
+          imagePullPolicy: always
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 3
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 3000
+            failureThreshold: 60
+            periodSeconds: 5
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+            - name: jmx
+              containerPort: {{ .Values.service.jmx }}
+              protocol: TCP
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "10"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: 
+                - all
+            privileged: false
+            # readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 10001
+            seccompProfile:
+              type: RuntimeDefault
+      serviceAccountName: nft-marketplace
+      terminationGracePeriodSeconds: 60
+      

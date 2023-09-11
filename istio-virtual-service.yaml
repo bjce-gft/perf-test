@@ -1,0 +1,17 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: toggens-perf-test
+  labels:
+    app: toggens-perf-test
+spec:
+  gateways:
+  - togg-id-system/tiam-gateway
+  hosts:
+  - test-perf-api.preprod.togg.cloud
+  http:
+  - route:
+    - destination:
+        host: svc-toggens-perf-test.nft-marketplace-system.svc.cluster.local
+        port:
+          number: 80
