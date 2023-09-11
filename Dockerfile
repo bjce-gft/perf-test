@@ -11,9 +11,9 @@ RUN mkdir /app && \
 USER $APPLICATION_USER_ID
 
 WORKDIR /app
-COPY --chown=$APPLICATION_USER_ID:$APPLICATION_USER_ID test-api/target/test-api-1.0-SNAPSHOT.jar app.jar
+COPY --chown=$APPLICATION_USER_ID:$APPLICATION_USER_ID target/*.jar app.jar
 
-RUN ls /app
+RUN ls -la
 
 EXPOSE 3000 32500
 
